@@ -1,15 +1,11 @@
+import {resolution, bugsCount, spawnableObjects} from './config'
 import React, { useEffect, useState } from 'react'
-import './App.css'
-import * as PIXI from 'pixi.js'
 import { Viewport } from 'pixi-viewport'
+import * as PIXI from 'pixi.js'
 import Victor from 'victor'
-import { Predator, Herbivore, Food } from './FloraAndFauna'
+import './App.css'
 
-const resolution = {
-    x: 500,
-    y: 500
-}
-const bugsCount = 3
+
 
 export default () => {
     const [items, setItems] = useState({})
@@ -19,18 +15,16 @@ export default () => {
             width: window.innerWidth,
             height: window.innerHeight,
             transparent: false,
-            backgroundColor: 0xbbbbbb,
+            backgroundColor: 0xDDDDDD,
             resolution: window.devicePixelRatio || 1,
             antialias: true
         })
         document.body.appendChild(app.view)
 
-
         const viewport = new Viewport({ interaction: app.renderer.plugins.interaction })
         viewport.moveCenter(resolution.x / 2, resolution.y / 2)
         viewport.drag().pinch().wheel().decelerate()
         app.stage.addChild(viewport)
-
 
         const border = new PIXI.Graphics()
         border.beginFill(0xaaaaaa)
@@ -38,30 +32,42 @@ export default () => {
         border.endFill()
         viewport.addChild(border)
 
-
         app.ticker.add(() => {
             for (const key in items) {
                 items[key].forEach(item => {
                     if (item.x <= 0 || item.x >= resolution.x) item.vec.invertX()
                     if (item.y <= 0 || item.y >= resolution.y) item.vec.invertY()
+                    if (item.x <= 0) item.x = 1
+                    if (item.y <= 0) item.y = 1
+                    if (item.x >= resolution.x) item.x = resolution.x -1
+                    if (item.y >= resolution.y) item.y = resolution.y -1
 
-                    item.move && item.move()
-                    item.energy && (item.energy > 0 || terminate(item, viewport))
+                    item.move && item.move(items)
+                    if (item.energy !== undefined){
+                        if (item.energy <= 0 )terminate(item, viewport)
+                        if (item.energy > item.energyToReplicate){
+                            item.energy /= 2
+                            const x = item.x
+                            const y = item.y
+                            const vec = item.vec.clone().invert()
+                            const newSpeedModifier = (Math.random() - .5) /2
+                            vec.x += newSpeedModifier
+                            vec.y += newSpeedModifier
+
+                            spawn(new spawnableObjects[item.constructor.name](x, y, vec),viewport)
+                        }
+                    }
                 })
             }
 
-            Math.random() < .99 || spawn(new Food(resolution.x * Math.random(), resolution.y * Math.random()), viewport)
+            spawn(new spawnableObjects['Plant'](resolution.x * Math.random(), resolution.y * Math.random()), viewport)
         })
+        
 
-        for (let i = 0; i < bugsCount; i++) {
-            const item = new Predator(resolution.x * Math.random(), resolution.y * Math.random(), Victor(0, 1).rotate(Math.random() * 2 * Math.PI))
-            spawn(item, viewport)
-        }
-
-        for (let i = 0; i < bugsCount; i++) {
-            const item = new Herbivore(resolution.x * Math.random(), resolution.y * Math.random(), Victor(0, 1).rotate(Math.random() * 2 * Math.PI))
-            spawn(item, viewport)
-        }
+        for (let i = 0; i < bugsCount; i++) 
+            spawn(new spawnableObjects['Herbivore'](resolution.x * Math.random(), resolution.y * Math.random(), Victor(0, 1).rotate(Math.random() * 2 * Math.PI)), viewport)
+        
+        spawn(new spawnableObjects['Predator'](resolution.x * Math.random(), resolution.y * Math.random(), Victor(0, 2).rotate(Math.random() * 2 * Math.PI)), viewport)
 
 
         return () => document.body.removeChild(app.view)
@@ -73,6 +79,9 @@ export default () => {
         itemsCopy[item.constructor.name + 's'].push(item)
         setItems(itemsCopy)
         container.addChild(item)
+
+
+        item.updateGenome != undefined && item.updateGenome()
     }
 
     const terminate = (item, container) => {
@@ -85,12 +94,16 @@ export default () => {
         container.removeChild(item)
     }
 
+
     return (
         <div>
-            {Object.keys(items).map( (key, i) => <p>{key}: {items[key].length}</p>)}
+            {Object.keys(items).map( key => <p>{key}: {items[key].length}</p>)}
         </div>
     )
 }
+
+
+
 
 
 

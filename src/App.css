@@ -12,3 +12,8 @@ div {
     color: rgb(9, 46, 0);
     text-align: left;
 }
+
+p {
+    margin: 0;
+    padding: 0;
+}
