@@ -10,6 +10,7 @@ export class Plant extends PIXI.Sprite{
         this.y = y
         this.scale.set(.3)
         this.energy = 100
+        this.vec = new Victor(0,0)
     }
 }
 
@@ -63,10 +64,17 @@ class Bug extends PIXI.Sprite{
         this.energy -= this.vec.length()
         this.rotation = this.vec.direction()
 
+                                                                                    
         const visibleFood = this.visibleFood !== undefined && this.visibleFood(items)
-        const visibleDanger = this.visibleDanger !== undefined && this.visibleDanger(items)
+            // .filter(el => el.food.vec.magnitude() < this.vec.magnitude())
+            .sort( (firstEl, secondEl) => firstEl.food.vec.magnitude() * firstEl.distance - secondEl.food.vec.magnitude() * secondEl.distance)
 
 
+        const visibleDanger = this.visibleDanger !== undefined && this.visibleDanger(items).filter(el => el.danger.vec.magnitude() > this.vec.magnitude())
+
+
+
+        //Area: instincts
         if (!visibleFood.length && !visibleDanger.length) this.status = 'idle'
         if (visibleFood.length && !visibleDanger.length) this.status = 'moving_to_food'
         if (!visibleFood.length && visibleDanger.length) this.status = 'running_from_danger'
@@ -78,17 +86,30 @@ class Bug extends PIXI.Sprite{
             }
         }
 
+        //Area: brain
+        if (this.status === 'moving_to_food' ){
+            
+        }
+
+
+
+
+
+
+
         switch (this.status) {
             case 'moving_to_food':
                 this.vec.rotate((Victor(visibleFood[0].food.x - this.x, visibleFood[0].food.y - this.y).angle() - this.vec.angle()))
+                // this.vec.rotate(visibleFood[0].food.vec.clone().add(this.vec).angle())
+                // this.vec.rotate((Victor(visibleFood[0].food.vec.clone().add(this.vec)).angle() - this.vec.angle()))
                 break
             case 'running_from_danger':
                 this.vec.rotate((Victor(visibleDanger[0].danger.x - this.x, visibleDanger[0].danger.y - this.y).angle() - this.vec.angle()))
                 this.vec.rotate(Math.PI)
-                this.vec.rotate((Math.random()-0.5)/15)
+                this.vec.rotate((Math.random()-0.5)/10)
                 break
             default:
-                this.vec.rotate((Math.random()-0.5)/10)
+                // this.vec.rotate((Math.random()-0.5)/10)
                 break
         }
         
