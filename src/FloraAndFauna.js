@@ -10,7 +10,7 @@ export class Plant extends PIXI.Sprite{
         this.y = y
         this.scale.set(.3)
         this.energy = 100
-        this.vec = new Victor(0,0)
+        this.vec = new Victor(0, 0)
     }
 }
 
@@ -30,6 +30,8 @@ class Bug extends PIXI.Sprite{
         this.energyToReplicate = 1000
         this.foodType = []
         this.dangerSource = []
+        this.currentFood = undefined
+        this.currentDanger = undefined
     }
 
     visibleFood(items){
@@ -65,58 +67,65 @@ class Bug extends PIXI.Sprite{
         this.rotation = this.vec.direction()
 
                                                                                     
-        const visibleFood = this.visibleFood !== undefined && this.visibleFood(items)
-            // .filter(el => el.food.vec.magnitude() < this.vec.magnitude())
-            .sort( (firstEl, secondEl) => firstEl.food.vec.magnitude() * firstEl.distance - secondEl.food.vec.magnitude() * secondEl.distance)
+        this.currentFood = this.visibleFood !== undefined && this.visibleFood(items)
+        // .filter(el => el.food.vec.magnitude() < this.vec.magnitude())
+        .sort( (firstEl, secondEl) => firstEl.food.vec.magnitude() * firstEl.distance - secondEl.food.vec.magnitude() * secondEl.distance)[0]
 
+        this.currentDanger =  this.visibleDanger !== undefined ? this.visibleDanger(items).filter(el => el.danger.vec.magnitude() > this.vec.magnitude())[0] : undefined
 
-        const visibleDanger = this.visibleDanger !== undefined && this.visibleDanger(items).filter(el => el.danger.vec.magnitude() > this.vec.magnitude())
+        // console.log(this.visibleDanger(items).filter(el => el.danger.vec.magnitude() > this.vec.magnitude())[0])
 
-
-
+       
         //Area: instincts
-        if (!visibleFood.length && !visibleDanger.length) this.status = 'idle'
-        if (visibleFood.length && !visibleDanger.length) this.status = 'moving_to_food'
-        if (!visibleFood.length && visibleDanger.length) this.status = 'running_from_danger'
-        if (visibleFood.length && visibleDanger.length){
-            if ((visibleFood.length ? visibleFood[0].distance : this.viewRadius + 1) < (visibleDanger.length ? visibleDanger[0].distance : this.viewRadius + 1)){
-                this.status = 'moving_to_food'   
-            }else{
-                this.status = 'running_from_danger'
-            }
-        }
+        if (!this.currentFood && !this.currentDanger) this.status = 'idle'
+        if ( this.currentFood && !this.currentDanger) this.status = 'moving_to_food'
+        if (!this.currentFood &&  this.currentDanger) this.status = 'running_from_danger'
+        if ( this.currentFood &&  this.currentDanger) this.status =  this.currentFood.distance < this.currentDanger.distance ? 'moving_to_food' : 'running_from_danger'
+            
+
 
         //Area: brain
         if (this.status === 'moving_to_food' ){
             
         }
 
-
-
-
-
-
-
         switch (this.status) {
             case 'moving_to_food':
-                this.vec.rotate((Victor(visibleFood[0].food.x - this.x, visibleFood[0].food.y - this.y).angle() - this.vec.angle()))
+                const distanceToTarget = Victor(this.currentFood.food.x - this.x, this.currentFood.food.y - this.y).magnitude()
+                const iterationsToArrive = distanceToTarget / this.vec.magnitude()
+                const futurePointOfTarget = {
+                    x: this.currentFood.food.x + this.currentFood.food.vec.clone().x * iterationsToArrive,
+                    y: this.currentFood.food.y + this.currentFood.food.vec.clone().y * iterationsToArrive
+                }
+
+                const assaultVector = Victor(futurePointOfTarget.x - this.x, futurePointOfTarget.y - this.y)
+
+                console.log({
+                    distanceToTarget,
+                    iterationsToArrive,
+                    futurePointOfTarget,
+                    assaultVector
+                })
+
+                this.vec.rotate((assaultVector.angle() - this.vec.angle()))
+                // this.vec.rotate((Victor(this.currentFood.food.x - this.x, this.currentFood.food.y - this.y).angle() - this.vec.angle()))
                 // this.vec.rotate(visibleFood[0].food.vec.clone().add(this.vec).angle())
                 // this.vec.rotate((Victor(visibleFood[0].food.vec.clone().add(this.vec)).angle() - this.vec.angle()))
                 break
             case 'running_from_danger':
-                this.vec.rotate((Victor(visibleDanger[0].danger.x - this.x, visibleDanger[0].danger.y - this.y).angle() - this.vec.angle()))
+                this.vec.rotate((Victor(this.currentDanger.danger.x - this.x, this.currentDanger.danger.y - this.y).angle() - this.vec.angle()))
                 this.vec.rotate(Math.PI)
-                this.vec.rotate((Math.random()-0.5)/10)
+                this.vec.rotate((Math.random()-0.5)/8)
                 break
             default:
                 // this.vec.rotate((Math.random()-0.5)/10)
                 break
         }
         
-        if (visibleFood[0]){
-            if (visibleFood[0].distance <= 3){
-                this.energy += visibleFood[0].food.energy
-                visibleFood[0].food.energy = 0
+        if (this.currentFood){
+            if (this.currentFood.distance <= 3){
+                this.energy += this.currentFood.food.energy
+                this.currentFood.food.energy = 0
             }
         }
     }

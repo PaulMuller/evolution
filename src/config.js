@@ -1,15 +1,14 @@
 import { Predator, Herbivore, Plant } from './FloraAndFauna'
 
 
-export const resolution = {
-    x: 500,
-    y: 500
-}
+export const resolution = {x: 1000, y: 1000}
+export const spawnableObjects = {Predator, Herbivore, Plant}
+export const bugsCount = 8
+export const eatRange = 3
+    
+    
 
-export const bugsCount = 1
+    
+    
+    
 
-export const spawnableObjects = {
-    Predator,
-    Herbivore,
-    Plant
-}

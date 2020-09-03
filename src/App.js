@@ -54,23 +54,23 @@ export default () => {
                             vec.x += newSpeedModifier
                             vec.y += newSpeedModifier
 
-                            spawn(new spawnableObjects[item.constructor.name](x, y, vec),viewport)
+                            spawn(new spawnableObjects[item.constructor.name](x, y, vec), viewport)
                         }
                     }
                 })
             }
 
-            // Math.random() < .05 && spawn(new spawnableObjects['Plant'](resolution.x * Math.random(), resolution.y * Math.random()), viewport)
+            spawn(new spawnableObjects['Plant'](resolution.x * Math.random(), resolution.y * Math.random()), viewport)
         })
         
 
         for (let i = 0; i < bugsCount; i++) 
-            // spawn(new spawnableObjects['Herbivore'](resolution.x * Math.random(), resolution.y * Math.random(), Victor(0, .4).rotate(Math.random() * 2 * Math.PI)), viewport)
+            spawn(new spawnableObjects['Herbivore'](resolution.x * Math.random(), resolution.y * Math.random(), Victor(0, 1).rotate(Math.random() * 2 * Math.PI)), viewport)
         
-        // spawn(new spawnableObjects['Predator'](resolution.x * Math.random(), resolution.y * Math.random(), Victor(0, .2).rotate(Math.random() * 2 * Math.PI)), viewport)
-        spawn(new spawnableObjects['Predator'](resolution.x /2, resolution.y, Victor(0, .3)), viewport)
-        spawn(new spawnableObjects['Herbivore'](0, resolution.y /2, Victor(.4, 0)), viewport)
-        spawn(new spawnableObjects['Plant'](resolution.x, resolution.y /2), viewport)
+        spawn(new spawnableObjects['Predator'](resolution.x * Math.random(), resolution.y * Math.random(), Victor(0, 1.3).rotate(Math.random() * 2 * Math.PI)), viewport)
+        // spawn(new spawnableObjects['Predator'](resolution.x /2, resolution.y, Victor(0, .3)), viewport)
+        // spawn(new spawnableObjects['Herbivore'](0, resolution.y /2, Victor(.4, 0)), viewport)
+        // spawn(new spawnableObjects['Plant'](resolution.x, resolution.y /2), viewport)
 
         return () => document.body.removeChild(app.view)
     }, [])
@@ -83,7 +83,7 @@ export default () => {
         container.addChild(item)
 
 
-        item.updateGenome != undefined && item.updateGenome()
+        item.updateGenome !== undefined && item.updateGenome()
     }
 
     const terminate = (item, container) => {
